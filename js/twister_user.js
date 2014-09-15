@@ -382,7 +382,9 @@ function funSavePWD(dmConvo, dm_screenname, dmData){
 				lastPostId = dmList[i].id;
 			}
         }
-    }
+    } else {
+		lastPostId = -1;
+	}
 	strNewPassword = '{"SetTime":"' + parseInt(Math.round(new Date().getTime()/1000)) + '", "Password":"' + hex_md5(strNewPassword) + '"}';
 	newDirectMsg(strNewPassword, dm_screenname);
 	$noteField.text(polyglot.t('The new password has been saved'));
