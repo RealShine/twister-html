@@ -20,6 +20,9 @@
     <script src="js/twister_newmsgs.js"></script>
     <script src="js/interface_common.js"></script>
     <script src="js/interface_profile-edit.js"></script>
+	<script src="js/twister_directmsg.js"></script>
+	<script src="js/twister_formatpost.js"></script>
+	<script src="js/md5.js"></script>
 
     <script>
         $(document).ready(function()
@@ -81,14 +84,25 @@
         <input type="text" class="input-bitmessage" placeholder="Bitmessage address"/>
       </div>
       <div class="profile-edition-buttons">
-          <button class="toggle-priv-key" style="float: left" href="#">Secret Key</button>
+          <!-- <button class="toggle-priv-key" style="float: left" href="#">Secret Key</button> -->
           <button class="cancel-changes" href="#">Cancel</button>
           <button class="submit-changes" href="#">Save Changes</button>
       </div>
+	  
+	  <div>
+		<p> setup your login password </p>
+        <!-- <input type="text" class="input-orig-password" placeholder="original password"/> -->
+        <input type="password" class="input-new-password" placeholder="new password"/>
+        <input type="password" class="input-new-password-again" placeholder="repeat new password"/>
+		<button class="setup-password" href="#">Save</button><br>
+		<span class="showMsg"></span>
+	  </div>
 
+	  <!-- 
       <div style="font-size:80%;text-align: center;" class="secret-key-container">
          <span class="label">Secret key:</span> <span class="secret-key"></span>
       </div>
+       -->
       
     </div>
     

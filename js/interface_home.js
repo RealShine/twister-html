@@ -123,6 +123,23 @@ var InterfaceFunctions = function()
                      if( args.cbFunc )
                         args.cbFunc(args.cbArg);
                  }, {cbFunc:cbFunc, cbArg:cbArg});
+            
+			// Remind user to set password
+			var strCookie=document.cookie;
+			var arrCookie=strCookie.split("; ");
+			var isImportAction;
+			for(var i=0;i<arrCookie.length;i++){
+				var arr=arrCookie[i].split("=");
+				if("isImportAction"==arr[0]){
+					isImportAction=arr[1]; 
+					break; 
+				}
+			}
+			
+			if (isImportAction == 1){
+				alert(polyglot.t("Your KEY was imported, now you can set a password in the Profile Area."));
+				document.cookie="isImportAction=0"; 
+			}
         }
     }
 };

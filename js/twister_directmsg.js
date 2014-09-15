@@ -105,9 +105,8 @@ function directMsgSubmit(e)
     var $replyText = $this.closest(".post-area-new").find("textarea");
 
     var $dmConversation = $(".directMessages");
-
-    newDirectMsg($replyText.val(), $dmConversation.attr("data-dm-screen-name"));
-
+	var strBanJSON = $replyText.val();
+	newDirectMsg(strBanJSON.replace(/^\{*/,""), $dmConversation.attr("data-dm-screen-name"));
     $replyText.val("");
 }
 

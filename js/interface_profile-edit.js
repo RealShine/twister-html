@@ -19,6 +19,7 @@ function initProfileEdit() {
     $("#avatar-file").bind( "change", handleAvatarFileSelect);
     $(".submit-changes").click( saveProfile );
     $(".cancel-changes").click( $.MAL.goHome );
+    $(".setup-password").click( savePassword );
 
     initUser( function() {
         if( !defaultScreenName ) {
@@ -39,8 +40,9 @@ function initProfileEdit() {
         loadAvatarForEdit();
         loadProfileForEdit();
         
-        $(".secret-key-container").hide();
+        //$(".secret-key-container").hide();
 
+        /*
         $(".toggle-priv-key").click(function () {
           if ($(".secret-key-container").is(":visible")) {
               $(".secret-key-container").fadeOut(function () {
@@ -53,6 +55,7 @@ function initProfileEdit() {
             }, {});
           }
         });
+        */
         
     });
 }
@@ -94,12 +97,14 @@ function handleAvatarFileSelect(evt) {
 function verifyUserAlreadyInBlockchain()
 {
     $.MAL.disableButton($(".submit-changes"));
+    $.MAL.disableButton($(".setup-password"));
     
     dumpPubkey(defaultScreenName, function(args, pubkey) {
                     //pubkey = "";
                     if( pubkey.length > 0 ) {
                         follow('twister', true, function() {
                             $.MAL.enableButton($(".submit-changes"));
+                            $.MAL.enableButton($(".setup-password"));
                         });
                     } else {
                         if( !newUserWarnDisplayed ) {

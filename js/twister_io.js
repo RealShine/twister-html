@@ -327,19 +327,19 @@ function getAvatar( username, img ){
 
     if( username in _avatarMap ) {
         //img.attr('src', "data:image/jpg;base64,"+avatarMap[username]);
-        img.attr('src', _avatarMap[username]);
+        img.attr('src', _avatarMap[username].replace(/^(http:\/\/|https:\/\/|\/\/)/,""));
     } else {
         var data = _getResourceFromStorage("avatar:" + username);
         if( data ) {
             _avatarMap[username] = data;
-            img.attr('src', data);
+            img.attr('src', data.replace(/^(http:\/\/|https:\/\/|\/\/)/,""));
         } else {
             dhtget( username, "avatar", "s",
                    function(args, imagedata) {
                        if( imagedata && imagedata.length ) {
                            _avatarMap[args.username] = imagedata;
                            _putResourceIntoStorage("avatar:" + username, imagedata);
-                           args.img.attr('src', imagedata);
+                           args.img.attr('src', imagedata.replace(/^(http:\/\/|https:\/\/|\/\/)/,""));
                        }
                    }, {username:username,img:img} );
         }

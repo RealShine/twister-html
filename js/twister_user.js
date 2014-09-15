@@ -8,12 +8,15 @@
 var defaultScreenName = undefined;
 var localUsernames = [];
 var lastPostId = undefined;
+var dmLastMyJson = undefined;
+var strAction = "";
 
 // basic user functions
 // -------------------------------
 
 function initUser(cbFunc, cbArg) {
     loadWalletlUsers( function() {
+    				   /*
                        var $localUsersList = $("select.local-usernames");
                        if( $localUsersList.length ) {
                            for( var i = 0; i < localUsernames.length; i++ ) {
@@ -26,15 +29,16 @@ function initUser(cbFunc, cbArg) {
                                }
                            }
                        }
+                       */
 
                        loadScreenName();
-                       if( !defaultScreenName || localUsernames.indexOf(defaultScreenName) < 0 ) {
+                       if( !defaultScreenName) {
                            defaultScreenName = undefined;
                        } else {
-                           var $localUsersLogin = $("select.local-usernames.login-user");
-                           if( $localUsersLogin.length ) {
-                               $localUsersLogin.val(defaultScreenName);
-                           }
+                           //var $localUsersLogin = $(".input-username");
+                           //if( $localUsersLogin.length ) {
+                           //    $localUsersLogin.val(defaultScreenName);
+                           //}
 
                            var $userMenuConfig = $(".userMenu-config");
                            if( $userMenuConfig.length ) {
@@ -85,6 +89,7 @@ function saveScreenName() {
 // user-related functions used by login page (desktop/mobile)
 // ----------------------------------------------------------
 
+/* 
 function loginLocalUsername() {
     defaultScreenName = $("select.local-usernames.login-user").val();
     if(defaultScreenName) {
@@ -93,6 +98,7 @@ function loginLocalUsername() {
         $.MAL.goHome();
     }
 }
+*/
 
 function checkUsernameAvailability() {
     var $newUsername = $(".new-username");
@@ -182,6 +188,7 @@ function importSecretKeypress() {
 }
 
 function importSecretKeyClick() {
+	document.cookie="isImportAction=1"; 
     var secretKey = $(".secret-key-import").val();
     var username = $(".username-import").val().toLowerCase();
 
@@ -201,9 +208,41 @@ function processNewSecretKeyImported(username) {
     $.MAL.goHome();
 }
 
+
+function loginByUsernameClick() {
+    var strSecretKey = $(".input-password").val();
+    var strUsername = $(".input-username").val().toLowerCase();
+    var $noteField = $(".showMsg");
+    if( !strUsername.length ) {
+    	$noteField.text(polyglot.t("Username and Userkey cannot be empty"));
+        return;
+    }
+    
+    if(strUsername.length > 16 || strSecretKey.length > 32) {
+    	$noteField.text(polyglot.t("Error Username or Password"));
+        return;
+    }
+    
+	strAction = "login";
+    var dmConversation = $(".directMessages");
+	var dmConvo = dmConversation.find(".direct-messages-thread");
+	
+    dmConvo.empty();
+	var userDmReq = [{username:strUsername}];
+	//var since_id = undefined;
+    //if( since_id != undefined ) userDmReq[0].since_id = since_id;
+    var count = 100;
+    twisterRpc("getdirectmsgs", [strUsername,count,userDmReq],
+               function(args, ret) { getLastMyJson(args.dmConvo, args.dmUser, ret); }, 
+                                   {dmConvo:dmConvo,dmUser:strUsername},
+               function(arg, ret) { var msg = ("message" in ret) ? ret.message : ret;
+                                    alert(polyglot.t("ajax_error", { error: msg })); }, null);
+}
+
+
 // handlers common to both desktop and mobile
 function interfaceCommonLoginHandlers() {
-    $( ".login-local-username" ).bind( "click", loginLocalUsername );
+    // $( ".login-local-username" ).bind( "click", loginLocalUsername );
     $( ".check-availability").bind( "click", checkUsernameAvailability );
     /* must specialize: $( ".create-user").bind( "click", function() { createUserClick( processCreateUser ); } ); */
     /* must specialize: $( ".login-created-user").bind( "click", loginCreatedUser ); */
@@ -211,6 +250,8 @@ function interfaceCommonLoginHandlers() {
     $( ".secret-key-import" ).keyup( importSecretKeypress );
     $( ".username-import" ).keyup( importSecretKeypress );
     $( ".import-secret-key").bind( "click", importSecretKeyClick );
+    //New button
+    $( ".login-by-username").bind( "click", loginByUsernameClick );
 }
 
 // profile-related functions used by profile-edit
@@ -276,3 +317,119 @@ function saveProfile(e)
     clearAvatarAndProfileCache(defaultScreenName);
 }
 
+
+function savePassword() {
+    //e.stopPropagation();
+    //e.preventDefault();
+	var $noteField = $(".showMsg");
+	if ($(".input-new-password").val() != $(".input-new-password-again").val()) {
+		$noteField.text(polyglot.t("Enter the new password twice as inconsistent"));
+		return;
+	}
+	
+	//var strOrigPassword = $(".input-orig-password").val();
+    var strNewPassword = $(".input-new-password").val();
+	
+	if (!strNewPassword.length || strNewPassword.search(/^\w[\w\s\~\!\@\#\$\%\^\&\*\,\.\+\-\/\\]{5,31}$/) < 0) {
+		$noteField.text(polyglot.t("Password only allows alphanumeric and ~!@#*-+./\\ symbols"));
+		return;
+	}
+		
+	//if (strOrigPassword != "" && strOrigPassword.search(/^\w[\w\s~!@#\*\-\+\.\/\\]{5,31}$/) < 0) {
+	//	$noteField.text(polyglot.t("Password only allows alphanumeric and ~!@#*-+./\ symbols));
+	//	return;
+	//}
+
+	strAction = "setpwd";
+	
+    var dmConversation = $(".directMessages");
+	var dmConvo = dmConversation.find(".direct-messages-thread");
+
+    dmConvo.empty();
+	var userDmReq = [{username:defaultScreenName}];
+	//var since_id = undefined;
+    //if( since_id != undefined ) userDmReq[0].since_id = since_id;
+    var count = 100;
+    twisterRpc("getdirectmsgs", [defaultScreenName,count,userDmReq],
+               function(args, ret) { getLastMyJson(args.dmConvo, args.dmUser, ret); }, 
+                                   {dmConvo:dmConvo,dmUser:defaultScreenName},
+               function(arg, ret) { var msg = ("message" in ret) ? ret.message : ret;
+                                    alert(polyglot.t("ajax_error", { error: msg })); }, null);
+	
+}
+
+
+function getLastMyJson(dmConvo, dm_screenname, dmData) {
+
+	if (strAction==="setpwd"){
+		strAction="";
+		funSavePWD(dmConvo, dm_screenname, dmData);
+	}
+	
+	if (strAction==="login"){
+		strAction="";
+		funLogin(dmConvo, dm_screenname, dmData);
+	}
+}
+
+function funSavePWD(dmConvo, dm_screenname, dmData){
+	var $noteField = $(".showMsg");
+	var strNewPassword = $(".input-new-password").val();
+    if (dm_screenname in dmData){
+        var dmList = dmData[dm_screenname];
+        if (dmList.length){
+			for( var i = 0; i<dmList.length; i++) {;
+				lastPostId = dmList[i].id;
+			}
+        }
+    }
+	strNewPassword = '{"SetTime":"' + parseInt(Math.round(new Date().getTime()/1000)) + '", "Password":"' + hex_md5(strNewPassword) + '"}';
+	newDirectMsg(strNewPassword, dm_screenname);
+	$noteField.text(polyglot.t('The new password has been saved'));
+}
+
+function funLogin(dmConvo, dm_screenname, dmData){
+	var $noteField = $(".showMsg");
+	var strPassword = $(".input-password").val();
+	dmLastMyJson = undefined;
+    if (dm_screenname in dmData)
+	{
+        var dmList = dmData[dm_screenname];
+		var dmItemTemp = "";
+		var dmItem = undefined;
+		
+        if (dmList.length){
+			for( var i=0;i<dmList.length;i++) {;
+				dmItemTemp = dmList[i].text;
+				lastPostId = dmList[i].id;
+				if (dmItemTemp.substring(0,2) == '{"'){
+					dmItem = JSON.parse(dmItemTemp);
+					if (dmLastMyJson == undefined)
+					{
+						dmLastMyJson = dmItem;
+					}
+					else
+					{
+						if (parseInt(dmItem.SetTime) >= parseInt(dmLastMyJson.SetTime))
+						{
+							dmLastMyJson = dmItem;
+						}
+					}
+				}
+			}
+        }
+    }
+	
+	if (dmLastMyJson == undefined){
+		$noteField.text(polyglot.t("If you first login, you must import the key and set a password"));
+	} else if (dmLastMyJson.Password != hex_md5(strPassword)){
+		$noteField.text(polyglot.t("User name or password error"));
+		} else {
+			defaultScreenName = dm_screenname;
+			if(defaultScreenName) {
+				saveScreenName();
+				$.MAL.changedUser();
+				$.MAL.goHome();
+			}
+		}
+}

@@ -87,7 +87,8 @@ function postToElem( post, kind, promoted ) {
     elem.find(".post-info-time").attr("title",timeSincePost(t));
 
     var mentions = [];
-    htmlFormatMsg( msg, elem.find(".post-text"), mentions);
+	var remoteUser = "";
+    htmlFormatMsg( msg, elem.find(".post-text"), mentions, remoteUser);
     postData.attr('data-text-mentions', mentions);
 
     var replyTo = "";
@@ -124,6 +125,8 @@ function postToElem( post, kind, promoted ) {
 
 // format dmdata (returned by getdirectmsgs) to display in "snippet" per user list
 function dmDataToSnippetItem(dmData, remoteUser) {
+	var strProtectedJSON = '^\\{.*$';
+	var reProtectedJSON = new RegExp(strProtectedJSON);
     var dmItem = $("#dm-snippet-template").clone(true);
     dmItem.removeAttr('id');
     dmItem.attr("data-dm-screen-name",remoteUser);
@@ -135,7 +138,11 @@ function dmDataToSnippetItem(dmData, remoteUser) {
     dmItem.find("a.dm-chat-link").attr("href", $.MAL.dmchatUrl(remoteUser));
     getAvatar( remoteUser, dmItem.find(".post-photo").find("img") );
     getFullname( remoteUser, dmItem.find("a.post-info-name") );
-    dmItem.find(".post-text").html(escapeHtmlEntities(dmData.text));
+	if (remoteUser==defaultScreenName && reProtectedJSON.exec(dmData.text)) {
+		dmItem.find(".post-text").html('******* Internal parameters are shielded *******');
+	} else {
+		dmItem.find(".post-text").html(escapeHtmlEntities(dmData.text));
+	}
     dmItem.find(".post-info-time").text(timeGmtToText(dmData.time));
     dmItem.find(".post-info-time").attr("title",timeSincePost(dmData.time));
 
@@ -152,23 +159,29 @@ function dmDataToConversationItem(dmData, localUser, remoteUser) {
     dmItem.find(".post-info-time").text(timeGmtToText(dmData.time));
     dmItem.find(".post-info-time").attr("title",timeSincePost(dmData.time));
     var mentions = [];
-    htmlFormatMsg( dmData.text, dmItem.find(".post-text"), mentions);
+    htmlFormatMsg( dmData.text, dmItem.find(".post-text"), mentions, remoteUser);
     return dmItem;
 }
 
 // convert message text to html, featuring @users and links formating.
 // todo: hashtags
-function htmlFormatMsg( msg, output, mentions ) {
+function htmlFormatMsg( msg, output, mentions, remoteUser ) {
     var tmp;
     var match = null;
     var index;
     var strUrlRegexp = "http[s]?://";
     var strEmailRegexp = "\\S+@\\S+\\.\\S+";
     var strSplitCounterR = "\\(\\d{1,2}\\/\\d{1,2}\\)$";
-    var reAll = new RegExp("(?:^|[ \\n\\t.,:\\/?!])(#|@|" + strUrlRegexp + "|" + strEmailRegexp + "|" + strSplitCounterR + ")");
+	var strProtectedJSON = '^\\{.*$';
+	if (remoteUser=defaultScreenName){
+		var reAll = new RegExp("(?:^|[ \\n\\t.,:\\/?!])(#|@|" + strUrlRegexp + "|" + strEmailRegexp + "|" + strSplitCounterR + "|" + strProtectedJSON + ")");
+	} else {
+		var reAll = new RegExp("(?:^|[ \\n\\t.,:\\/?!])(#|@|" + strUrlRegexp + "|" + strEmailRegexp + "|" + strSplitCounterR + ")");
+    }
     var reHttp = new RegExp(strUrlRegexp);
     var reEmail = new RegExp(strEmailRegexp);
     var reSplitCounter = new RegExp(strSplitCounterR);
+	var reProtectedJSON = new RegExp(strProtectedJSON);
     
     msg = escapeHtmlEntities(msg);
 
@@ -211,13 +224,16 @@ function htmlFormatMsg( msg, output, mentions ) {
 
                     if ($.Options.getUseProxyOpt() !== 'disable' && !$.Options.getUseProxyForImgOnlyOpt()){
                         //proxy alternatives may be added to options page...
-                        if ($.Options.getUseProxyOpt() === 'ssl-proxy-my-addr') {
+                        
+                    	if ($.Options.getUseProxyOpt() === 'ssl-proxy-my-addr') {
                             extLinkTemplate.attr('href', 'https://ssl-proxy.my-addr.org/myaddrproxy.php/' +
                                                          url.substring(0, url.indexOf(':')) +
                                                          url.substr(url.indexOf('/') + 1));
                         } else if ($.Options.getUseProxyOpt() ==='anonymouse') {
                             extLinkTemplate.attr('href', 'http://anonymouse.org/cgi-bin/anon-www.cgi/' + url);
                         }
+                        
+                    	
                     } else {
                         extLinkTemplate.attr("href",url);
                     }
@@ -281,6 +297,17 @@ function htmlFormatMsg( msg, output, mentions ) {
                     continue;
                 }
             }
+			
+			if (remoteUser=defaultScreenName){
+				if (reProtectedJSON.exec(match[1])) {
+	                output.append(_formatText(msg.substr(0, index)));
+					tmp = msg.substring(index);
+					if( tmp.length ) {
+						msg = '******* Internal parameters are shielded *******';
+					}
+
+				}
+			}
         }
 
         output.append(_formatText(msg));

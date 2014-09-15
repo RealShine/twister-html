@@ -18,6 +18,8 @@
     <script src="js/interface_login.js"></script>
     <script src="js/polyglot.min.js"></script>
     <script src="js/interface_localization.js"></script>
+	<script src="js/twister_formatpost.js"></script>
+	<script src="js/md5.js"></script>
 
     <script>
         $(document).ready(function()
@@ -53,7 +55,21 @@
   <!-- LADO ESQUERDO DE MÓDULOS INIT --> 
     <div class="login">
       <h2> twister login </h2>
+      <div class="module">
+        <!-- <p> login whit username and password </p> -->
+      	<div>
+			<input class="input-username" type="textbox" placeholder="Type your nickname here" cols="16" rows="1"></input>
+      	</div>
+        <div>
+			<input class="input-password" type="password" placeholder="Type your password here" cols="16" rows="1"></input>
+        </div>
+        <div>
+            <button class="login-by-username">Login</button>
+            <span class="showMsg"></span>
+        </div>
+      </div>
 
+	  <!-- 
       <div class="module">
         <p> Existing local users </p>
         <div>
@@ -62,6 +78,7 @@
             <button class="login-local-username">Login</button>
         </div>
       </div>
+      -->
 
      <!--  <span> Or... </span> -->
 
